@@ -10,8 +10,7 @@ from datetime import datetime, timedelta, timezone
 load_dotenv()
 router = APIRouter(prefix="/auth")
 
-JWT_SECRET = os.environ["JWT_SECRET"]
-JWT_ALGORITHM = "HS256"
+
     
 
 def hash_pw(pw: str) -> str:
@@ -38,7 +37,7 @@ def login(body: LoginRequest):
     if body.email is None or body.password is None:
         raise HTTPException(
             status_code = 400,
-            detail = {"code" : "MISSING_FIELD", "message" : "Required field is missing"}
+            detail = {"code" : "MISSING_FIELD", "message" : "Required field(s) is missing"}
         )
     user = get_user(body.email)
     if user is None or not verify_pw(body.password, user[-2]):
@@ -52,16 +51,16 @@ def login(body: LoginRequest):
         "exp" : datetime.now(timezone.utc) + timedelta(hours=1)
     }
 
-    token = jwt.encode(payload, JWT_SECRET, algorithm = JWT_ALGORITHM)
+    token = jwt.encode(payload, os.environ["JWT_SECRET"], algorithm = os.environ["JWT_ALGORITHM"])
     return {"token" : token}
 
 
-@router.post("/register")
+@router.post("/register", status_code=201)
 def register(body: RegisterUser):
     if body.name is None or body.email is None or body.password is None:
         raise HTTPException(
                     status_code = 400,
-                    detail = {"code" : "MISSING_FIELD", "message" : "Required field is missing"}
+                    detail = {"code" : "MISSING_FIELD", "message" : "Required field(s) is missing"}
                 )
 
     user = get_user(body.email)

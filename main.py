@@ -7,9 +7,9 @@ from routes.users import router as users_router
 from routes.auth import router as auth_router
 
 app = FastAPI()
-app.include_router(events_router)
-app.include_router(users_router)
-app.include_router(auth_router)
+app.include_router(events_router, prefix="/api")
+app.include_router(users_router,  prefix="/api")
+app.include_router(auth_router,  prefix="/api")
 
 @app.exception_handler(HTTPException)
 def handle_http_exception(request: Request, exc: HTTPException):
