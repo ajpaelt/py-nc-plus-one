@@ -1,7 +1,7 @@
 import psycopg2.extras as extras
 from connection import get_connection
 import json
-import bcrypt
+from routes.auth import hash_pw
 
 ## 'db/data/'
 ## 'db/test_data/test_'
@@ -36,7 +36,7 @@ def create_events_table():
     create_statement = "CREATE TABLE events (" \
     "id SERIAL PRIMARY KEY, " \
     "title VARCHAR(255) NOT NULL, " \
-    "description VARCHAR(255) UNIQUE, " \
+    "description VARCHAR(255), " \
     "starts_at TIMESTAMP NOT NULL, " \
     "ends_at TIMESTAMP NOT NULL, " \
     "org_id INT REFERENCES users(id), " \
@@ -49,7 +49,8 @@ def create_rsvps_table():
     "id SERIAL PRIMARY KEY, " \
     "attendee_id INT REFERENCES users(id), " \
     "event_id INT REFERENCES events(id), " \
-    "created_at TIMESTAMP DEFAULT NOW())"
+    "created_at TIMESTAMP DEFAULT NOW(), " \
+    "UNIQUE (attendee_id, event_id))"
     cursor.execute(create_statement)    
 
 def load_data(file_path):
@@ -61,7 +62,7 @@ def seed_users():
     data = load_data(file_path_root + 'users.json')
     insert_statement = "INSERT INTO users (name, email, password) VALUES %s;"
     extras.execute_values(cursor, insert_statement,
-        [(d["name"], d["email"], bcrypt.hashpw(d["password"].encode("utf-8"), bcrypt.gensalt()).decode("utf-8")) for d in data]
+        [(d["name"], d["email"], hash_pw(d["password"])) for d in data]
     )
 
 def seed_venues():
