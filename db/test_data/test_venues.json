@@ -1,0 +1,5 @@
+[
+  {"name": "venue_b", "address": "address_b", "capacity": 50},
+  {"name": "venue_c", "address": null, "capacity": 100},
+  {"name": "venue_a", "address": "address_a", "capacity": 10}
+]
