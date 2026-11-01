@@ -11,7 +11,7 @@ class RegisterUser(BaseModel):
     email: Optional[str] = None
     password: Optional[str] = None
 
-class NewEvent(BaseModel):
+class Event(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     starts_at: Optional[datetime] = None

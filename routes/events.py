@@ -1,17 +1,15 @@
-import os
-import jwt
 from dotenv import load_dotenv
 
 from fastapi import APIRouter, HTTPException, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from db.connection import get_connection
-from models.schemas import NewEvent
+from models.schemas import Event
+from security.security import get_current_user, get_event_organiser
 
 load_dotenv()
 router = APIRouter(prefix = "/events", tags = ["events"])
 
 @router.get("/{event_id}")
-def get_event(event_id):
+def get_event(event_id: int):
     conn = get_connection()
     cursor = conn.cursor()
     try:
@@ -61,32 +59,9 @@ def get_events():
 
     columns = [desc[0] for desc in cursor.description]
     rows = cursor.fetchall()
-    cursor.close()
     conn.close()
     return {"events": [dict(zip(columns,row)) for row in rows]}
 
-
-bearer_scheme = HTTPBearer(auto_error=False)
-
-def get_current_user(credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme)):
-    unauthorised = HTTPException(
-        status_code = 401,
-        detail = {"code" : "UNAUTHENTICATED", "message" : "You are not authenticated to do that"}
-    )
-
-    if credentials is None:
-        raise unauthorised
-
-    try:
-        payload = jwt.decode(credentials.credentials, os.environ["JWT_SECRET"], algorithms = [os.environ["JWT_ALGORITHM"]])
-        user_id = int(payload["sub"])
-    except():
-        raise unauthorised
-
-    return user_id
-
-
-#### Move above functions to new file (maybe security file)
 
 @router.post("/{event_id}/rsvp", status_code=201)
 def rsvp(event_id: int, user: str = Depends(get_current_user)):
@@ -117,8 +92,9 @@ def rsvp(event_id: int, user: str = Depends(get_current_user)):
     return {"rsvp": dict(zip(columns,row)) for row in rows}
 
 
+
 @router.post("", status_code = 201)
-def create_event(body: NewEvent, user: str = Depends(get_current_user)):
+def create_event(body: Event, user: str = Depends(get_current_user)):
     req_fields = (body.title, body.starts_at, body.ends_at, body.venue_id)
     if any([field is None for field in req_fields]):
         raise HTTPException(
@@ -128,6 +104,7 @@ def create_event(body: NewEvent, user: str = Depends(get_current_user)):
 
     conn = get_connection()
     cursor = conn.cursor()
+
     cursor.execute(
         """
         INSERT INTO events (title, description, starts_at, ends_at, org_id, venue_id, created_at) VALUES (%s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP) RETURNING *;
@@ -139,3 +116,56 @@ def create_event(body: NewEvent, user: str = Depends(get_current_user)):
     cursor.close()
     conn.close()    
     return {"event": dict(zip(columns,row)) for row in rows}
+
+
+@router.patch("/{event_id}")
+def update_event(body: Event, event_id: int, user: str = Depends(get_current_user)):
+    
+    get_event(event_id)
+    get_event_organiser(event_id, user)
+    
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    new_fields = body.model_dump(exclude_unset = True)
+
+    for key, value in new_fields.items():
+        cursor.execute(f"UPDATE events SET {key} = %s WHERE id = %s", (value, event_id,))
+
+    conn.commit()
+
+    cursor.execute(
+        """
+        SELECT * FROM events WHERE id = %s;
+        """, (event_id,)
+        )
+    columns = [desc[0] for desc in cursor.description]
+    row = cursor.fetchone()
+    conn.close()
+
+    return {"event" : dict(zip(columns,row))}
+
+
+@router.get("/{event_id}/attendees")
+def get_event_attendees(event_id: int, user: str = Depends(get_current_user)):
+
+    get_event(event_id)
+    get_event_organiser(event_id, user)
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT  u.id, u.name, u.email FROM users u
+        JOIN rsvps r
+        ON u.id = r.attendee_id
+        WHERE r.event_id = %s
+        """, (event_id,)
+    )
+
+    columns = [desc[0] for desc in cursor.description]
+    rows = cursor.fetchall()
+    conn.close()
+    return {"attendees": [dict(zip(columns,row)) for row in rows]}
+
