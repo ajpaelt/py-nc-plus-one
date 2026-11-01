@@ -1,10 +1,10 @@
 from dotenv import load_dotenv
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends
 from db.connection import get_connection
 from security.security import get_current_user, get_event_organiser
 
-router = APIRouter(prefix = "/users", tags = ["users"])
+router = APIRouter(prefix = "/users", tags = ["user"])
 load_dotenv()
 
 @router.get("/me/events")

@@ -1,8 +1,13 @@
 import psycopg2.extras as extras
 from connection import get_connection
 import json
+import sys
+
+sys.path.insert(0, ".")
 from routes.auth import hash_pw
 
+
+## file roots ##
 ## 'db/data/'
 ## 'db/test_data/test_'
 
