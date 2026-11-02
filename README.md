@@ -71,4 +71,7 @@ py-nc-plus-one/
 └── tests/               # Integration tests
 
 
-
+## Still To Be Done##
+- Tests still need to be implemented
+- 400 errors for incorrect datetime formats and endtime before startime
+- Final endpoint GET /api/organisers/:id/stats 
