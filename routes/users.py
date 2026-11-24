@@ -8,7 +8,7 @@ router = APIRouter(prefix = "/users", tags = ["user"])
 load_dotenv()
 
 @router.get("/me/events")
-def get_my_events(user: str = Depends(get_current_user)):
+def get_my_events(user_id: str = Depends(get_current_user)):
 
     conn = get_connection()
     cursor = conn.cursor()
@@ -23,7 +23,7 @@ def get_my_events(user: str = Depends(get_current_user)):
         JOIN users u ON r.attendee_id = u.id
         WHERE u.id = %s
         ORDER BY e.starts_at;
-        """, (user,)
+        """, (user_id,)
     )
 
     columns = [desc[0] for desc in cursor.description]
