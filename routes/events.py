@@ -92,6 +92,40 @@ def rsvp(event_id: int, user: str = Depends(get_current_user)):
     return {"rsvp": dict(zip(columns,row)) for row in rows}
 
 
+@router.delete("/{event_id}/unrsvp", status_code=201)
+def un_rsvp(event_id: int, user: str = Depends(get_current_user)):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    get_event(event_id)
+
+    try:
+        cursor.execute(
+        """
+        DELETE FROM rsvps WHERE (attendee_id, event_id) = (%s, %s);
+        """, (user, event_id,)
+        )
+        if cursor.rowcount == 0:
+            raise HTTPException(
+                status_code = 404,
+                detail = {"code" : "NOT FOUND", "message" : "User has not RSVPed for this event"}
+            )
+
+    except HTTPException:
+        raise
+
+    except Exception:
+        raise HTTPException(
+            status_code = 500,
+            detail = {"code" : "Error", "message" : "Something has gone wrong"}
+        )
+    finally:
+        conn.commit()
+
+
+    return f"Removed RSVP from event {event_id}" 
+
+
 
 @router.post("", status_code = 201)
 def create_event(body: Event, user: str = Depends(get_current_user)):

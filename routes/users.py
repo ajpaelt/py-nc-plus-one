@@ -30,7 +30,7 @@ def get_me(user_id: str = Depends(get_current_user)):
 
 
 @router.get("/me/rsvps")
-def get_my_events(user_id: str = Depends(get_current_user)):
+def get_my_rsvps(user_id: str = Depends(get_current_user)):
 
     conn = get_connection()
     cursor = conn.cursor()
