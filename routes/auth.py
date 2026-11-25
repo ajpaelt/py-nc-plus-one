@@ -85,23 +85,3 @@ def register(body: RegisterUser):
     conn.close()
 
     return {"user" : dict(zip(columns, row))}
-
-@router.get("/me")
-def get_me(user_id: str = Depends(get_current_user)):
-
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    cursor.execute(
-        """
-        SELECT id ,email
-        FROM users
-        WHERE id = %s
-        """, (user_id,)
-    )
-    columns = [desc[0] for desc in cursor.description]
-    print(columns)
-    row = cursor.fetchone()
-    print(row)
-    conn.close()
-    return dict(zip(columns,row))

@@ -17,7 +17,7 @@ pip install -r requirements.txt
 ## connection.py ##
 This file will establish a connection to the database. You will need to create a .env file in the root. There is an example file provided to see what your own .env file should look like. It will load whatever crededentials are stored in the .env file.
 ```
-python connection.py
+python db/connection.py
 ```
 We could later change it to connect to specific databases (i.e. test, production) by load_dotenv(f".env.{db_name}") and have a different .env file for each database.
 
@@ -45,7 +45,9 @@ METHOD      PATH                            DESC                                
 GET         /api/events                     Return list of all events                               no      200
 GET         /api/events/:id                 Return single event from its id                         no      200         400, 404
 GET         /api/events/:id/attendees       Return list of user RSVPed for an event                 yes     200         401, 403, 404
-GET         /api/user/me/events             Return list of events user has RSVPed to                yes     200         401
+GET         /api/users/me                   Return current user                                     yes     200         401
+GET         /api/users/me/rsvps             Return list of events user has RSVPed to                yes     200         401
+GET         /api/user/me/events             Return list of events user has organised                yes     200         401
 POST        /api/auth/login                 Authenticate an existing user and return a signed JWT   no      200         400, 401
 POST        /api/auth/register              Register a new user                                     no      201         400, 409
 POST        /api/events/:id/rsvp            RSVP an authenticated user to an event                  yes     201         401, 404, 409
