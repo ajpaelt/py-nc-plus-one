@@ -7,12 +7,14 @@ from routes.events import router as events_router
 from routes.users import router as users_router
 from routes.auth import router as auth_router
 from routes.organisers import router as organiser_router
+from routes.venues import router as venues_router
 
 app = FastAPI()
 app.include_router(events_router, prefix="/api")
 app.include_router(users_router,  prefix="/api")
 app.include_router(auth_router,  prefix="/api")
 app.include_router(organiser_router, prefix="/api")
+app.include_router(venues_router,  prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,
