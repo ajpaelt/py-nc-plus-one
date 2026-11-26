@@ -108,7 +108,7 @@ def un_rsvp(event_id: int, user: str = Depends(get_current_user)):
         if cursor.rowcount == 0:
             raise HTTPException(
                 status_code = 404,
-                detail = {"code" : "NOT FOUND", "message" : "User has not RSVPed for this event"}
+                detail = {"code" : "NOT_FOUND", "message" : "User has not RSVPed for this event"}
             )
 
     except HTTPException:
@@ -135,14 +135,18 @@ def create_event(body: Event, user: str = Depends(get_current_user)):
             status_code = 400,
             detail = {"code" : "MISSING_FIELD", "message" : "Required field(s) is missing"}
         )
-
+    if body.ends_at <= body.starts_at:
+        raise HTTPException(
+            status_code=400,
+            detail={"code" : "INVALID_EVENT_TIME", "message" : "The end time must be after the start time"}
+        )
     conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute(
         """
         INSERT INTO events (title, description, starts_at, ends_at, org_id, venue_id, created_at) VALUES (%s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP) RETURNING *;
-        """, (body.title, body.description, body.starts_at, body.ends_at, body.venue_id, user,)
+        """, (body.title, body.description, body.starts_at, body.ends_at, user, body.venue_id,)
     )
 
     columns = [desc[0] for desc in cursor.description]
